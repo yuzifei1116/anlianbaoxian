@@ -53,6 +53,19 @@ class WeChatController extends Controller
         Log::info('return response.');
          return $app->server->serve();
     }
+
+
+    public function valid()
+    {
+        $echoStr = $_GET["echostr"];
+ 
+        //valid signature , option
+        if($this->checkSignature()){
+            echo $echoStr;
+            exit;
+        }
+    }
+    
 }
 
 
