@@ -59,13 +59,9 @@ class WeChatController extends Controller
     {
         $echoStr = $_GET["echostr"];
  
-        //valid signature , option
-        if($this->checkSignature()){
-            echo $echoStr;
-            exit;
-        }
+        echo $echoStr;
     }
-    
+
 }
 
 
