@@ -40,8 +40,8 @@ class ActivityController extends Controller
             
             $app = app('wechat.official_account');
  
-            $app->user->get($openId);   
- 
+            dd($app->user->get($openId));   
+            
             $data  = \App\Activity::where('id',$request->id)->get(); 
 
             return response()->json(['success'=>['message'=>'获取成功','data'=>$data]]);
