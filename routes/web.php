@@ -18,7 +18,7 @@ Route::get('/', function () {
 Route::get('activity_status','TaskController@activity_status');//定时任务-修改活动状态
 
 
-Route::any('/', 'WeChatController@serves');
+Route::any('/', 'WeChatController@valid');
 
 Route::any('/wechat', 'WeChatController@serve')->middleware('wechat.oauth');
 
