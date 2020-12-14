@@ -24,7 +24,7 @@ class ActivityController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>'系统错误,请联系客服']]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 
@@ -36,19 +36,17 @@ class ActivityController extends Controller
     public function activityFirst(Request $request)
     {
 
-        try {
+        try { 
+
+            if(!$request->id) return response()->json(['error'=>['message'=>'请选择活动']]);
             
-            $app = app('wechat.official_account');
- 
-            dd($app->user->get($openId));   
-            
-            $data  = \App\Activity::where('id',$request->id)->get(); 
+            $data  = \App\Activity::where('id',$request->id)->get();  
 
             return response()->json(['success'=>['message'=>'获取成功','data'=>$data]]);
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>'系统错误,请联系客服']]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 
@@ -64,11 +62,41 @@ class ActivityController extends Controller
             
             if($request->type == 1){
 
+                if(!$request->user_id) return response()->json(['error'=>['message'=>'请先绑定工号']]);
+
+                $user = \App\User::where('id',$request->user_id)->first();
+
+                if(!$user)  return response()->json(['error'=>['message'=>'您非本公司员工']]);
+                
+                if(!$request->activity_id) return response()->json(['error'=>['message'=>'请选择活动']]);
+
                 \App\Enter::create(['user_id'=>$request->user_id,'activity_id'=>$request->activity_id]);
                 
                 //发送模板消息
 
             }else{
+
+                if(!$request->activity_id) return response()->json(['error'=>['message'=>'请选择活动']]);
+
+                if(!$request->user_id) return response()->json(['error'=>['message'=>'请先绑定工号']]);
+
+                $user = \App\User::where('id',$request->user_id)->first();
+
+                if(!$user)  return response()->json(['error'=>['message'=>'您非本公司员工']]);
+
+                if(!$request->name) return response()->json(['error'=>['message'=>'请填写邀约人姓名']]);
+
+                if(!$request->sex) return response()->json(['error'=>['message'=>'请填写邀约人性别']]);
+
+                if(!$request->old) return response()->json(['error'=>['message'=>'请填写邀约人年龄']]);
+
+                if(!$request->study) return response()->json(['error'=>['message'=>'请填写邀约人学历']]);
+
+                if(!$request->job) return response()->json(['error'=>['message'=>'请填写邀约人职位']]);
+
+                if(!$request->phone) return response()->json(['error'=>['message'=>'请填写邀约人电话']]);
+
+                if(!$request->desc) return response()->json(['error'=>['message'=>'请填写邀约人简介']]);
 
                 \App\Enter::create([
 
@@ -100,7 +128,7 @@ class ActivityController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>'系统错误,请联系客服']]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 
@@ -113,14 +141,24 @@ class ActivityController extends Controller
     {
 
         try {
+
+            if(!$request->id) return response()->json(['error'=>['message'=>'请选择活动']]);
             
             $data  = \App\Enter::where('id',$request->id)->delete();
+
+            if(strtotime($data->time) > time()){
+
+                return response()->json(['error'=>['message'=>'活动已过期']]);
+
+            }
+
+            //发送模板消息
 
             return response()->json(['success'=>['message'=>'取消成功','data'=>[]]]);
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>'系统错误,请联系客服']]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 
