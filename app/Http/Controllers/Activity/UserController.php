@@ -30,7 +30,7 @@ class UserController extends Controller
 
             $staff->save();
 
-            return response()->json(['error'=>['message'=>'绑定成功','data'=>[]]]);
+            return response()->json(['success'=>['message'=>'绑定成功','data'=>$user->id]]);
 
         } catch (\Throwable $th) {
             

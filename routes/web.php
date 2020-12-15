@@ -24,7 +24,9 @@ Route::any('/wechat', 'WeChatController@serve')->middleware('wechat.oauth');
 
 Route::group(['middleware' => ['web', 'wechat.oauth']], function () {
     Route::get('/user', function () {
-        session('wechat.oauth_user.default'); // 拿到授权用户资料
+        // session_start();
+        $user = session('wechat.oauth_user.default'); // 拿到授权用户资料
+        dd($user);
     });
 
     Route::get('api/activityList','Activity\ActivityController@activityList'); //活动列表
@@ -33,9 +35,11 @@ Route::group(['middleware' => ['web', 'wechat.oauth']], function () {
 
     Route::get('api/enter_activity','Activity\ActivityController@enter_activity'); //活动报名
 
-    Route::get('api/cancel_activity','Activity\ActivityController@cancel_activity'); //取消报名
+    Route::get('api/cancel_activity','Activity\ActivityController@cancel_activity'); //取消报名--
 
     Route::get('api/bindCard','Activity\UserController@bindCard'); //绑定工号
+
+    Route::get('api/act_logs','Activity\ActivityController@act_logs'); //报名记录
 
 });
 

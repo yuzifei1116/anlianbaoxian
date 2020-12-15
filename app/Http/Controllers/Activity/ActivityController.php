@@ -37,7 +37,7 @@ class ActivityController extends Controller
     {
 
         try { 
-
+            
             if(!$request->id) return response()->json(['error'=>['message'=>'请选择活动']]);
             
             $data  = \App\Activity::where('id',$request->id)->get();  
@@ -46,7 +46,7 @@ class ActivityController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>'系统错误']]);
+            return response()->json(['error'=>['message'=>$th->getMessage()]]);
 
         }
 
@@ -60,6 +60,7 @@ class ActivityController extends Controller
 
         try {
             
+            //本人报名
             if($request->type == 1){
 
                 if(!$request->user_id) return response()->json(['error'=>['message'=>'请先绑定工号']]);
@@ -71,9 +72,28 @@ class ActivityController extends Controller
                 if(!$request->activity_id) return response()->json(['error'=>['message'=>'请选择活动']]);
 
                 \App\Enter::create(['user_id'=>$request->user_id,'activity_id'=>$request->activity_id]);
+
+                $act = \App\Activity::where('id',$request->activity_id)->first();
                 
                 //发送模板消息
+                $users = session('wechat.oauth_user.default');
+            
+                $app = app('wechat.official_account');
 
+                $app->template_message->send([
+                    'touser' => $users->id,//用户openid
+                    'template_id' => 'r2JDNj8VULHjaRjRSjq10iuvuyDXzQO46fbCd-f9qC4',//发送的模板id
+                    'url' => 'http://finance.chengzhangxiu.com/api/activityList',//发送后用户点击跳转的链接
+                    'data' => [
+                        'first' => '您好，您已经报名成功!',
+                        'keyword1' => $act->title,
+                        'keyword2' => date('Y-m-d H:i:s',time()),
+                        'keyword3' => $act->address,
+                        'remark' => '活动发起成功，请按时参加'
+                    ],
+                ]);
+
+            //邀约人报名
             }else{
 
                 if(!$request->activity_id) return response()->json(['error'=>['message'=>'请选择活动']]);
@@ -120,7 +140,25 @@ class ActivityController extends Controller
 
                 ]);
 
+                $act = \App\Activity::where('id',$request->activity_id)->first();
+
                 //发送模板消息
+                $users = session('wechat.oauth_user.default');
+            
+                $app = app('wechat.official_account');
+
+                $app->template_message->send([
+                    'touser' => $users->id,//用户openid
+                    'template_id' => 'r2JDNj8VULHjaRjRSjq10iuvuyDXzQO46fbCd-f9qC4',//发送的模板id
+                    'url' => 'http://finance.chengzhangxiu.com/api/activityList',//发送后用户点击跳转的链接
+                    'data' => [
+                        'first' => '您好，您已经报名成功!',
+                        'keyword1' => $act->title,
+                        'keyword2' => date('Y-m-d H:i:s',time()),
+                        'keyword3' => $act->address,
+                        'remark' => '活动发起成功，请按时参加'
+                    ],
+                ]);
 
             }
 
@@ -144,13 +182,15 @@ class ActivityController extends Controller
 
             if(!$request->id) return response()->json(['error'=>['message'=>'请选择活动']]);
             
-            $data  = \App\Enter::where('id',$request->id)->delete();
+            $data  = \App\Enter::where('id',$request->id)->first();
 
             if(strtotime($data->time) > time()){
 
                 return response()->json(['error'=>['message'=>'活动已过期']]);
 
             }
+
+            $data  = \App\Enter::where('id',$request->id)->delete();
 
             //发送模板消息
 
@@ -161,6 +201,42 @@ class ActivityController extends Controller
             return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
+
+    }
+
+    /**
+     * 报名记录
+     */
+    public function act_logs(Request $request)
+    {
+
+        try {
+            
+            if(!$request->user_id) return response()->json(['error'=>['message'=>'请先绑定工号']]);
+
+            $user = \App\User::where('id',$request->user_id)->first();
+
+            if(!$user)  return response()->json(['error'=>['message'=>'您非本公司员工']]);
+
+            $data = \App\Enter::whereOr('user_id',$user->id)->whereOr('invite_user',$user->id)->get();
+
+            foreach($data as $k=>$v){
+
+                if($v['user_id'] != $user->id && $v['invite_user'] != $user->id){
+
+                    unset($data[$k]);
+
+                }
+
+            }
+
+            return response()->json(['success'=>['message'=>'取消成功','data'=>$data]]);
+
+        } catch (\Throwable $th) {
+            
+            return response()->json(['error'=>['message'=>'系统错误']]);
+
+        }   
 
     }
 
