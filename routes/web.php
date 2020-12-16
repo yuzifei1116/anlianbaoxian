@@ -28,18 +28,19 @@ Route::group(['middleware' => ['web', 'wechat.oauth']], function () {
         $user = session('wechat.oauth_user.default'); // 拿到授权用户资料
         dd($user);
     });
-
-    Route::get('api/activityList','Activity\ActivityController@activityList'); //活动列表
-
-    Route::get('api/activityFirst','Activity\ActivityController@activityFirst'); //活动详情
-
-    Route::get('api/enter_activity','Activity\ActivityController@enter_activity'); //活动报名
-
-    Route::get('api/cancel_activity','Activity\ActivityController@cancel_activity'); //取消报名--
-
-    Route::get('api/bindCard','Activity\UserController@bindCard'); //绑定工号
-
-    Route::get('api/act_logs','Activity\ActivityController@act_logs'); //报名记录
-
 });
+
+Route::any('api/activityList','Activity\ActivityController@activityList'); //活动列表
+
+Route::any('api/activityFirst','Activity\ActivityController@activityFirst'); //活动详情
+
+Route::any('api/enter_activity','Activity\ActivityController@enter_activity'); //活动报名
+
+Route::any('api/cancel_activity','Activity\ActivityController@cancel_activity'); //取消报名--
+
+Route::any('api/bindCard','Activity\UserController@bindCard'); //绑定工号
+
+Route::any('api/act_logs','Activity\ActivityController@act_logs'); //报名记录
+
+Route::any('api/userCard','Activity\UserController@userCard'); //个人信息
 

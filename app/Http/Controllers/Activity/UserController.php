@@ -40,4 +40,36 @@ class UserController extends Controller
 
     }
 
+    /**
+     * 个人信息
+     */
+    public function userCard(Request $request)
+    {
+
+        try {
+
+            $user = session('wechat.oauth_user.default');//获取微信用户信息
+
+            $staff = \App\User::where('openid',$user->id)->first();
+
+            if(!$staff){
+
+                $staff['name'] = '';
+
+                $staff['card'] = '';
+
+                $staff['openid'] = '';
+
+            }
+
+            return response()->json(['success'=>['message'=>'获取成功','data'=>$staff]]);
+
+        } catch (\Throwable $th) {
+            
+            return response()->json(['error'=>['message'=>'系统错误']]);
+
+        }
+
+    }
+
 }
