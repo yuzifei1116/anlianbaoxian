@@ -20,17 +20,17 @@ class UserController extends Controller
 
             if(!$request->card) return response()->json(['error'=>['message'=>'请填写工号']]);
 
-            $user = session('wechat.oauth_user.default');//获取微信用户信息
+            $user = session('user');
 
             $staff = \App\User::where('name',$request->name)->first();
 
             if(!$staff) return response()->json(['error'=>['message'=>'只有本公司员工才能绑定！']]);
 
-            $staff->openid = $user->id;
+            $staff->openid = $user;
 
             $staff->save();
 
-            return response()->json(['success'=>['message'=>'绑定成功','data'=>$user->id]]);
+            return response()->json(['success'=>['message'=>'绑定成功','data'=>$staff->id]]);
 
         } catch (\Throwable $th) {
             
@@ -48,10 +48,10 @@ class UserController extends Controller
 
         try {
 
-            $user = session('wechat.oauth_user.default');//获取微信用户信息
-
-            $staff = \App\User::where('openid',$user->id)->first();
-
+            $user = session('user');
+            
+            $staff = \App\User::where('openid',$user)->first();
+ 
             if(!$staff){
 
                 $staff['name'] = '';
@@ -66,7 +66,7 @@ class UserController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>'系统错误']]);
+            return response()->json(['error'=>['message'=>$th->getMessage()]]);
 
         }
 

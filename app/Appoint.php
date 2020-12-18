@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Enter extends Model
+class Appoint extends Model
 {
     /**
      * [$guarded 黑名单设置]
@@ -12,10 +12,10 @@ class Enter extends Model
      */
     protected $guarded = [];
 
-    protected $table = "enters";
+    protected $table = "appoints";
 
     /**
-     * 报名表反向关联活动表
+     * 预约表反向关联活动表
      */
     public function activity()
     {
