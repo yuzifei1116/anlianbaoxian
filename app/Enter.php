@@ -21,4 +21,12 @@ class Enter extends Model
     {
         return $this->belongsTo('App\Activity','activity_id','id');
     }
+
+    /**
+     * 报名表反向关联员工表
+     */
+    public function user()
+    {
+        return $this->belongsTo('App\User','user_id','id');
+    }
 }

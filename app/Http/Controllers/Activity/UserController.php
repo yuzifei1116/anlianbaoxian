@@ -21,7 +21,7 @@ class UserController extends Controller
             if(!$request->card) return response()->json(['error'=>['message'=>'请填写工号']]);
 
             $user = session('user');
-
+            
             $staff = \App\User::where('name',$request->name)->first();
 
             if(!$staff) return response()->json(['error'=>['message'=>'只有本公司员工才能绑定！']]);
@@ -51,14 +51,30 @@ class UserController extends Controller
             $user = session('user');
             
             $staff = \App\User::where('openid',$user)->first();
- 
-            if(!$staff){
+            
+            if($staff){
 
-                $staff['name'] = '';
+                if(empty($staff['openid'])){
 
-                $staff['card'] = '';
+                    $data['id'] = '0';
 
-                $staff['openid'] = '';
+                    $data['card'] = '';
+
+                    $data['name'] = '';
+
+                    return response()->json(['success'=>['message'=>'获取成功','data'=>$data]]);
+    
+                }
+
+            }else{
+
+                $data['id'] = '0';
+
+                $data['card'] = '';
+
+                $data['name'] = '';
+
+                return response()->json(['success'=>['message'=>'获取成功','data'=>$data]]);
 
             }
 
@@ -66,7 +82,7 @@ class UserController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>$th->getMessage()]]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 

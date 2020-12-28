@@ -11,6 +11,7 @@ use App\Imports\DataExcel;
 use Encore\Admin\Actions\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
+use App\Jobs\SendMoney;
 
 class ImportExcel extends Action
 {
@@ -34,22 +35,60 @@ class ImportExcel extends Action
 
                     foreach ($rows[1] as $k => $c) $headings[Str::snake($c)] = $k;
 
+                    foreach ($rows[2] as $l => $p) $headings[Str::snake($p)] = $l;
+
                 }
                 
                 $data = [];
                 
                 foreach ($rows as $key => $row) 
                 {
-                    if ( $key > 0 && isset($row[$headings['name']]) && isset($row[$headings['card']]) ) $data[] = ['name'=>$row[$headings['name']],'card'=>$row[$headings['card']]];
+                    if ( $key > 0 && isset($row[$headings['name']]) && isset($row[$headings['card']]) && isset($row[$headings['money']]) ){
+
+                        $data[] = [
+                            'name'=>$row[$headings['name']],
+                            'card'=>$row[$headings['card']],
+                            'money'=>$row[$headings['money']],
+                            'abe'=>$row[$headings['abe']],
+                            'abe_card'=>$row[$headings['abe_card']],
+                            'abm'=>$row[$headings['abm']],
+                            'abm_card'=>$row[$headings['abm_card']],
+                        ];
+
+                    } 
                 }
                 
                 foreach($data as $k=>$v){
 
-                    if(\App\User::where(['name'=>$v['name']])->first()){
+                    if(\App\User::where(['name'=>$v['name'],'card'=>$v['card']])->first()){
+
+                        $user = \App\User::where('name',$v['name'])->where('card',$v['card'])->first();
+
+                        \App\User::where('name',$v['name'])->where('card',$v['card'])->update(
+                            ['name'=>$v['name'],
+                            'card'=>$v['card'],
+                            'money'=>$v['money'] + $user->money,
+                            'abe'=>$v['abe'],
+                            'abe_card'=>$v['abe_card'],
+                            'abm'=>$v['abm'],
+                            'abm_card'=>$v['abm_card'],
+                            ]
+                        );
                         
-                    }else \App\User::create(['name'=>$v['name'],'card'=>$v['card']]);
+                    }else \App\User::create([
+                        'name'=>$v['name'],
+                        'card'=>$v['card'],
+                        'money'=>$money,
+                        'abe'=>$v['abe'],
+                        'abe_card'=>$v['abe_card'],
+                        'abm'=>$v['abm'],
+                        'abm_card'=>$v['abm_card'],
+                    ]);
 
                 }
+
+                //分发队列--处理给用户发模板消息捐款--同步调度
+                SendMoney::dispatchNow($data);
                 
                 return $this->response()->success('导入成功')->refresh();
 

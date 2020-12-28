@@ -14,8 +14,6 @@ class ActivityController extends Controller
      */
     public function activityList(Request $request)
     {
-        
-        
         try {
             
             $data['book']  = \App\Activity::select('id','title','introduce','max_people','created_at')->where('status',0)->get();
@@ -25,7 +23,6 @@ class ActivityController extends Controller
             // $user = session('user');
 
             $user = \Session::get('user');
-            // dd($user);
             
             $user_id = \App\User::where('openid',$user)->value('id');
 
@@ -87,7 +84,7 @@ class ActivityController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>$th->getMessage()]]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 
@@ -216,7 +213,7 @@ class ActivityController extends Controller
             //本人报名
             if($request->type == 1){
                 
-                if(!$request->user_id) return response()->json(['error'=>['message'=>'请先绑定工号']]);
+                if(!$request->user_id || $request->user_id == '') return response()->json(['error'=>['message'=>'请先绑定工号']]);
 
                 if(!$request->activity_id) return response()->json(['error'=>['message'=>'请选择活动']]);
 
@@ -393,7 +390,7 @@ class ActivityController extends Controller
 
                 $app->template_message->send([
                     'touser' => $users,//用户openid
-                    'template_id' => 'r2JDNj8VULHjaRjRSjq10iuvuyDXzQO46fbCd-f9qC4',//发送的模板id
+                    'template_id' => 'oSqPEcvbSFuWCKrA8HjkxoyTg0vCqN3YjddIyadRBJY',//发送的模板id
                     'url' => 'http://anlian.mpsjdd.cn/h5/#/',//发送后用户点击跳转的链接
                     'data' => [
                         'first' => '您好，您已经报名成功!',
@@ -409,8 +406,8 @@ class ActivityController extends Controller
             return response()->json(['success'=>['message'=>'报名成功','data'=>[]]]);
 
         } catch (\Throwable $th) {
-            dd($th->getMessage());
-            return response()->json(['error'=>['message'=>$th->getMessage()]]);
+            
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 
@@ -429,49 +426,63 @@ class ActivityController extends Controller
             $data  = \App\Enter::where('id',$request->id)->first();
             
             $activity = \App\Activity::where('id',$data->activity_id)->first();
-
-            if(strtotime($activity->time) > time()){
+            
+            if(strtotime($activity->time) < time()){
 
                 return response()->json(['error'=>['message'=>'活动已过期']]);
 
             }
 
             $people = \App\Enter::where('activity_id',$data->activity_id)->count();
-
+            
             if($activity->max_people == $people){
-
-                $data  = \App\Enter::where('id',$request->id)->delete();
                 
                 //发送模板消息
                 $enters = \App\EnterTwo::where('activity_id',$activity->id)->orderBy('id','asc')->where('is_site',0)->first();
-
+                
                 if($enters){
 
-                    $user = session('user');
-            
-                    $app = app('wechat.official_account');
+                    if(isset($enters->user_id)){
 
-                    $app->template_message->send([
-                        'touser' => $users,//用户openid
-                        'template_id' => 'r2JDNj8VULHjaRjRSjq10iuvuyDXzQO46fbCd-f9qC4',//发送的模板id
-                        'url' => 'http://anlian.mpsjdd.cn/h5/#/',//发送后用户点击跳转的链接
-                        'data' => [
-                            'first' => '您已经排队成功!可以报名',
-                            'keyword1' => $activity->title,
-                            'keyword2' => date('Y-m-d H:i:s',time()),
-                            'keyword3' => $activity->address,
-                            'remark' => '活动排队成功，请30分钟内报名'
-                        ],
-                    ]);
+                        $user_id = $enters->user_id;
 
+                    }else{
+
+                        $user_id = $enters->invite_user;
+
+                    }
+                    
                     $enters->is_site = 1;
 
                     $enters->save();
 
+                    $users = \App\User::where('id',$user_id)->first();
+                
+                    if($users){
+
+                        $app = app('wechat.official_account');
+
+                        $app->template_message->send([
+                            'touser' => $users->openid,//用户openid
+                            'template_id' => 'r2JDNj8VULHjaRjRSjq10iuvuyDXzQO46fbCd-f9qC4',//发送的模板id
+                            'url' => 'http://anlian.mpsjdd.cn/h5/#/',//发送后用户点击跳转的链接
+                            'data' => [
+                                'first' => '您已经排队成功!可以报名',
+                                'keyword1' => $activity->title,
+                                'keyword2' => date('Y-m-d H:i:s',time()),
+                                'keyword3' => $activity->address,
+                                'remark' => '活动排队成功，请30分钟内报名'
+                            ],
+                        ]);
+
+                    }
+
                 }
-
+                
+                $data  = \App\Enter::where('id',$request->id)->delete();
+ 
             }else{
-
+                
                 $data  = \App\Enter::where('id',$request->id)->delete();
 
             }
@@ -480,7 +491,7 @@ class ActivityController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>$th->getMessage()]]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }
 
@@ -493,14 +504,26 @@ class ActivityController extends Controller
     {
 
         try {
+
+            // $user = session('user');
+
+            // $user_ids = \App\User::where('openid',$user)->first();
             
-            if(!$request->user_id) return response()->json(['error'=>['message'=>'请先绑定工号']]);
+            // if(!$user_ids) return response()->json(['error'=>['message'=>'请先绑定工号']]);
 
-            $users = \App\User::where('id',$request->user_id)->first();
+            // 
 
-            if(!$users)  return response()->json(['error'=>['message'=>'您非本公司员工']]);
+            // if(!$users)  return response()->json(['error'=>['message'=>'请先绑定工号']]);
+            
+            if(!$request->user_id || $request->user_id == '0'){
+
+                return response()->json(['error'=>['message'=>'请先绑定工号']]);
+
+            }  
 
             $user = session('user');
+
+            $users = \App\User::where('id',$request->user_id)->first();
 
             $user_id = \App\User::where('openid',$user)->value('id');
 
@@ -511,11 +534,19 @@ class ActivityController extends Controller
 
                 foreach($data['book'] as $k=>$v){
 
-                    if($v['user_id'] != $users->id && $v['invite_user'] != $users->id){
-    
+                    if($v['user_id'] != $user_id && $v['invite_user'] != $user_id){
+                        
                         unset($data['book'][$k]);
     
                     }
+    
+                }
+
+            }
+            
+            if($data['book']){
+
+                foreach($data['book'] as $k=>$v){
 
                     $act = \App\Activity::where('id',$v->activity_id)->first();
 
@@ -532,7 +563,7 @@ class ActivityController extends Controller
                         $data['book'][$k]['status'] = 0;
 
                     }
-    
+
                 }
 
                 foreach($data['book'] as $k=>$v){
@@ -560,9 +591,19 @@ class ActivityController extends Controller
     
                         unset($data['using'][$k]);
     
-                    }                  
+                    }
+                    
+                    if(strtotime($v['created_at']) + 7200 < time()){
+
+                        unset($data['using'][$k]);
+
+                    }
     
                 }
+
+            }
+            
+            if($data['using']){
 
                 foreach($data['using'] as $k=>$v){
 
@@ -582,9 +623,47 @@ class ActivityController extends Controller
 
         } catch (\Throwable $th) {
             
-            return response()->json(['error'=>['message'=>$th->getMessage()]]);
+            return response()->json(['error'=>['message'=>'系统错误']]);
 
         }   
+
+    }
+
+    /**
+     * 签到
+     */
+    public function sign(Request $request)
+    {
+
+        try {
+            
+            if(!$request->id) return response()->json(['error'=>['message'=>'请选择活动']]);
+
+            $data = \App\Enter::where('id',$request->id)->first();
+
+            $act = \App\Activity::where('id',$data->activity_id)->first();
+
+            if(time() < strtotime($act->time)) return response()->json(['error'=>['message'=>'未到签到时间']]);
+
+            if($data->sign == 1){
+
+                return response()->json(['error'=>['message'=>'您已经签到过']]);
+
+            }else{
+
+                $data->sign = 1;
+
+                $data->save();
+
+            }      
+
+            return response()->json(['success'=>['message'=>'签到成功','data'=>[]]]);
+
+        } catch (\Throwable $th) {
+            
+            return response()->json(['error'=>['message'=>'系统错误']]);
+
+        }
 
     }
 

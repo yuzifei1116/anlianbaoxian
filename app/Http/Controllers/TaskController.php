@@ -73,13 +73,13 @@ class TaskController extends Controller
             $data = \App\Enter::where('is_site',0)->get();
 
             foreach($data as $k=>$v){
-
+                
                 $act = \App\Activity::where('id',$v->activity_id)->first();
+                
+                if(!isset($v->invite_user)){
 
-                if(isset($act->invite_user)){
-
-                    $user = \App\User::where('id',$act->invite_user)->first();
-
+                    $user = \App\User::where('id',$v->user_id)->first();
+                    
                     $app = app('wechat.official_account');
 
                     $app->template_message->send([
@@ -97,7 +97,7 @@ class TaskController extends Controller
 
                 }else{
 
-                    $user = \App\User::where('id',$act->user_id)->first();
+                    $user = \App\User::where('id',$v->invite_user)->first();
 
                     $app = app('wechat.official_account');
 

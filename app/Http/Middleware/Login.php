@@ -19,19 +19,12 @@ class Login
      */
     public function handle($request, Closure $next)
     {
-        
+
+        // \Session::put('user','oVhj56l4gcsbxQ_8rMLPvmcoQsRw');
         $user = \Session::get('user');
+
+        session('user',$user);
         
-        if($user){
-
-            session('user',$user);
-
-        }else{
-
-            $user = session('user');
-
-        }
-        // dd($user);
         //微信授权
         if($user == NULL || empty($user)){
             
@@ -39,7 +32,7 @@ class Login
 
             $secret = '3476cc4c1b0a0535a275445d2f4fc118';
 
-            // $code = 0;
+            $code = 0;
 
             //获取code
             $refer = isset($_SERVER['HTTP_REFERER'])?$_SERVER['HTTP_REFERER']:'No refer found';
