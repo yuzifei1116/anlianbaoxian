@@ -20,9 +20,7 @@ class ActivityController extends Controller
 
             $data['using'] = \App\Activity::select('id','title','introduce','max_people','created_at')->where('status',1)->get();
 
-            // $user = session('user');
-
-            $user = \Session::get('user');
+            $user = $request->openid;
             
             $user_id = \App\User::where('openid',$user)->value('id');
 
@@ -79,6 +77,8 @@ class ActivityController extends Controller
                 }
 
             }
+            
+            $data['id'] = \App\WechatUser::where('open_id',$request->openid)->value('id');
             
             return response()->json(['success'=>['message'=>'获取成功','data'=>$data]]);
 
@@ -261,7 +261,7 @@ class ActivityController extends Controller
                 
                 //发送模板消息
                 
-                $users = session('user');
+                $users = $request->openid;
             
                 $app = app('wechat.official_account');
 
@@ -384,7 +384,7 @@ class ActivityController extends Controller
                 $act = \App\Activity::where('id',$request->activity_id)->first();
 
                 //发送模板消息
-                $users = session('user');
+                $users = $request->openid;
             
                 $app = app('wechat.official_account');
 
@@ -505,7 +505,7 @@ class ActivityController extends Controller
 
         try {
 
-            // $user = session('user');
+            // $user = $request->openid;
 
             // $user_ids = \App\User::where('openid',$user)->first();
             
@@ -521,7 +521,7 @@ class ActivityController extends Controller
 
             }  
 
-            $user = session('user');
+            $user = $request->openid;
 
             $users = \App\User::where('id',$request->user_id)->first();
 

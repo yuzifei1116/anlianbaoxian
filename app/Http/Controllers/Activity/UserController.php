@@ -20,7 +20,7 @@ class UserController extends Controller
 
             if(!$request->card) return response()->json(['error'=>['message'=>'请填写工号']]);
 
-            $user = session('user');
+            $user = $request->openid;
             
             $staff = \App\User::where('name',$request->name)->first();
 
@@ -29,6 +29,10 @@ class UserController extends Controller
             $staff->openid = $user;
 
             $staff->save();
+
+            $user_money = \App\UserTrvel::where('id',$staff->id)->first();
+
+            if(!$user_money) \App\UserTrvel::create(['user_id'=>$staff->id]);
 
             return response()->json(['success'=>['message'=>'绑定成功','data'=>$staff->id]]);
 
@@ -48,7 +52,7 @@ class UserController extends Controller
 
         try {
 
-            $user = session('user');
+            $user = $request->openid;
             
             $staff = \App\User::where('openid',$user)->first();
             
@@ -61,6 +65,8 @@ class UserController extends Controller
                     $data['card'] = '';
 
                     $data['name'] = '';
+
+                    $data['money'] = \App\UserTrvel::where(['user_id'=>$staff->id])->value('money') ?? 0;
 
                     return response()->json(['success'=>['message'=>'获取成功','data'=>$data]]);
     

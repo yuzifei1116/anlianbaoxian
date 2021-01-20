@@ -5,8 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use EasyWeChat\Factory;
-use Cache;
-use Illuminate\Support\Facades\Cookie;
 
 class Login
 {
@@ -19,14 +17,10 @@ class Login
      */
     public function handle($request, Closure $next)
     {
-
-        // \Session::put('user','oVhj56l4gcsbxQ_8rMLPvmcoQsRw');
-        $user = \Session::get('user');
-
-        session('user',$user);
-        
         //微信授权
-        if($user == NULL || empty($user)){
+        $uid = $request->uid;
+
+        if(!$uid){
             
             $appid = 'wxf0ad8be2322aba00';
 
@@ -50,7 +44,9 @@ class Login
                           
                 if(array_key_exists('openid',$oauth2)){
                     $openid = $oauth2['openid'];
-                    \Session::put('user',$openid);
+                    $user = \App\WechatUser::where('open_id',$openid)->first();
+                    if($user) $User = \App\WechatUser::create(['open_id',$openid]);
+                    $request->openid = $User['openid'];
                 }
 
             }else{
@@ -63,6 +59,11 @@ class Login
                 return response()->json(['success'=>['message'=>'!','data'=>$url,'code'=>201]]);
 
             }
+
+        }else{
+
+            $User = \App\WechatUser::where('id',$uid)->value('open_id');
+            $request->openid = $User['openid'];
 
         }
         
